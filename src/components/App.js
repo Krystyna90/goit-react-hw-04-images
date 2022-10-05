@@ -13,8 +13,8 @@ export default function App() {
   const [totalImages, setTotalImages] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [images, setImages] = useState(null);
-  const [error, setError] = useState(null);
+  const [images, setImages] = useState([]);
+  const [error, setError] = useState(false);
   const [currentImageUrl, setCurrentImageUrl] = useState(null);
   const [currentImageDescription, setCurrentImageDescription] = useState(null);
 
@@ -24,7 +24,7 @@ export default function App() {
     }
     setIsLoading((prevState) => !prevState);
 
-    fetchImages(imageName)
+    fetchImages(imageName, page)
       .then(({ hits, totalHits }) => {
         const imagesArray = hits.map((hit) => ({
           id: hit.id,
@@ -33,37 +33,23 @@ export default function App() {
           largeImage: hit.largeImageURL,
         }));
 
-        setImages(imagesArray);
+        setImages([...images, ...imagesArray]);
         setImagesOnPage(imagesArray.length);
         setTotalImages(totalHits);
       })
       .catch((error) => {
-        setError(error);
+        setError(true);
       })
       .finally(() => setIsLoading((prevState) => !prevState));
-  }, [imageName]);
+  }, [imageName, page]);
 
-  useEffect(() => {
-    setIsLoading((prevState) => !prevState);
-
-    fetchImages(imageName, page)
-      .then(({ hits }) => {
-        const imagesArray = hits.map((hit) => ({
-          id: hit.id,
-          description: hit.tags,
-          smallImage: hit.webformatURL,
-          largeImage: hit.largeImageURL,
-        }));
-
-        setImages([...images, ...imagesArray]);
-        setImagesOnPage((prevState) => prevState + imagesArray.length);
-      })
-      .catch((error) => setError(error))
-      .finally(() => setIsLoading((prevState) => !prevState));
-  }, [page, imageName]);
-
-  const getSearchRequest = (imageName) => {
-    setImageName(imageName);
+  const getSearchRequest = (imgName) => {
+    if (imgName !== imageName) {
+      setImageName(imgName);
+      setPage(1);
+      setImages([]);
+      setError(false);
+    }
   };
 
   const onNextFetch = () => {
